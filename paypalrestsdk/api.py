@@ -100,14 +100,19 @@ class Api(object):
                 # return cached copy
                 return self.token_hash
 
+        headers = util.merge_dict({
+            "Authorization": ("Basic %s" % self.basic_auth()),
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json", "User-Agent": self.user_agent
+        }, headers or {})
+
+        if 'PayPal-Mock-Response' in headers:
+            del headers['PayPal-Mock-Response']
+
         token = self.http_call(
             util.join_url(self.token_endpoint, path), "POST",
             data=payload,
-            headers=util.merge_dict({
-                "Authorization": ("Basic %s" % self.basic_auth()),
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json", "User-Agent": self.user_agent
-            }, headers or {}))
+            headers=headers)
 
         if refresh_token is None and authorization_code is None:
             # cache token for re-use in normal case
